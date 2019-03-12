@@ -7,12 +7,15 @@ import AddTodo from "./componnents/AddTodo";
 // import uuid from "uuid";
 import About from "./componnents/pages/About";
 import Axios from "axios";
+import firestore from "./Firestore";
 
 class App extends Component {
   state = {
-    todos: []
+    todos: [],
+    ref: firebase.firestore().collection("todos")
   };
   componentDidMount() {
+    const ref = firebase.firestore().collection("todos");
     Axios.get("https://jsonplaceholder.typicode.com/todos?_limit=10").then(res => this.setState({ todos: res.data }));
   }
 
