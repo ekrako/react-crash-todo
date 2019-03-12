@@ -7,16 +7,35 @@ import AddTodo from "./componnents/AddTodo";
 // import uuid from "uuid";
 import About from "./componnents/pages/About";
 import Axios from "axios";
-import firestore from "./Firestore";
+import firebase from "./Firestore";
 
 class App extends Component {
-  state = {
-    todos: [],
-    ref: firebase.firestore().collection("todos")
+  constructor(props) {
+    super(props);
+    this.ref = firebase.firestore().collection("todos");
+    this.state = {
+      todos: []
+    };
+  }
+
+  onCollectionUpdate = querySnapshot => {
+    const todos = [];
+    querySnapshot.forEach(doc => {
+      const { title, completed } = doc.data();
+      todos.push({
+        key: doc.id,
+        doc, // DocumentSnapshot
+        title,
+        completed
+      });
+    });
+    this.setState({
+      todos
+    });
   };
+
   componentDidMount() {
-    const ref = firebase.firestore().collection("todos");
-    Axios.get("https://jsonplaceholder.typicode.com/todos?_limit=10").then(res => this.setState({ todos: res.data }));
+    this.unsubscribe = this.ref.onSnapshot(this.onCollectionUpdate);
   }
 
   markComplete = id => {
