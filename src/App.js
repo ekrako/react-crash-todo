@@ -4,9 +4,7 @@ import "./App.css";
 import Todos from "./componnents/Todos";
 import Header from "./componnents/layout/Header";
 import AddTodo from "./componnents/AddTodo";
-// import uuid from "uuid";
 import About from "./componnents/pages/About";
-import Axios from "axios";
 import firebase from "./Firestore";
 
 class App extends Component {
@@ -23,8 +21,7 @@ class App extends Component {
     querySnapshot.forEach(doc => {
       const { title, completed } = doc.data();
       todos.push({
-        key: doc.id,
-        doc, // DocumentSnapshot
+        id: doc.id,
         title,
         completed
       });
@@ -39,24 +36,27 @@ class App extends Component {
   }
 
   markComplete = id => {
-    // console.log(this.state.todos);
-    this.setState({
-      todos: this.state.todos.map(todo => {
-        if (todo.id === id) {
-          todo.completed = !todo.completed;
-          Axios.put(`https://jsonplaceholder.typicode.com/todos/${id}`, todo);
-        }
-        return todo;
-      })
+    const updateRef = firebase
+      .firestore()
+      .collection("todos")
+      .doc(id);
+    updateRef.get().then(ref => {
+      const todo = ref.data();
+      updateRef.set(
+        {
+          // title: todo.title,
+          completed: !todo.completed
+        },
+        { merge: true }
+      );
     });
   };
   deleteItem = id => {
-    // console.log(this.state.todos);
-    Axios.delete(`https://jsonplaceholder.typicode.com/todos/${id}`).then(res => {
-      this.setState({
-        todos: this.state.todos.filter(todo => todo.id !== id)
-      });
-    });
+    firebase
+      .firestore()
+      .collection("todos")
+      .doc(id)
+      .delete();
   };
   addTodo = title => {
     const newTodo = {
@@ -64,9 +64,13 @@ class App extends Component {
       title,
       completed: false
     };
-    Axios.post("https://jsonplaceholder.typicode.com/todos", newTodo).then(res => {
-      this.setState({ todos: [...this.state.todos, res.data] });
-    });
+    // Axios.post("https://jsonplaceholder.typicode.com/todos", newTodo).then(res => {
+    //   this.setState({ todos: [...this.state.todos, res.data] });
+    // });
+    firebase
+      .firestore()
+      .collection("todos")
+      .add(newTodo);
   };
   render() {
     return (
